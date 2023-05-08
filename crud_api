@@ -1,0 +1,67 @@
+-> first create app
+-> npm install json-server  
+					(create db.json in the root folder)
+->json-server --watch db.json
+->import { faLock } from '@fortawesome/free-solid-svg-icons'; (for fontawesome,first install it using npm) ,
+	to use this faLock , we need to create a variable in the class let’s say faLock=faLock;
+	now use this like :: <fa-icon [icon]="faLock" class="fa-3x"></fa-icon> where [icon] contains the variable created in class, and tagname is predefined for 
+							fontawesome.
+
+->videos > https://www.youtube.com/watch?v=ibn2yAomxp8
+->json server handles the fake api.
+
+
+———————————————————— using guards to creation session like things ———————————————————————
+
+command ::   ng g guard guard_name
+
+	 //after running the above command , it will create an authguard file, and there will be one function , if the function returns true then the page will open,
+	 //if the function return false then the page will not open.
+	//now open the app.routing file and change the routing of the page like this (on which you want to apply auth guard)::
+				
+				  {
+   					 path: 'seller-home', component: SellerHomeComponent, canActivate:[AuthGuard]
+  				  }
+				// in the same routing.ts file Make sure to import AuthGuard in this routing file and also add it inside @NgModule providers.:
+					import { AuthGuard } from './auth.guard';
+					@NgModule({
+ 							 imports: [RouterModule.forRoot(routes)],
+ 							 exports: [RouterModule],
+  							providers:[AuthGuard]
+					})
+	//now open the services pageon which you are applyting the auth guard ( import { BehaviorSubject } from 'rxjs';):
+
+			export class SellerService {
+  					isSellerLoggedIn = new BehaviorSubject<boolean>(false)                     //this variable is to check if the user is logged in.
+ 					constructor(private http: HttpClient, private router: Router) { }                //HttpClient is to submit data to api,Router is to navigate to some other page.
+  					userSignUp(data: signUp) {
+
+						//here the below result variable will contain the Httpresponse object(which you can use to check the reponse of the api).
+         
+   						 this.http.post('http://localhost:3000/seller', data, { observe: 'response' }).subscribe((result) => {
+							 localStorage.setItem('seller',JSON.stringify(result.body));
+     						 	this.isSellerLoggedIn.next(true);   //assigning true to this variable because data has been entered.
+    						});
+  				   }
+
+					// to check if the data is stored in the localstorage or not ?(we will call this function inside the component.ts file , so that it will helps us to check
+					the data is inside localstorage or not)
+
+    					reloadSeller(){
+      					if(localStorage.getItem('seller')){
+        						this.isSellerLoggedIn.next(true); 
+        						this.router.navigate(['seller-home']);
+      					}
+    					}
+		  	}
+
+	// now open the auth-guard file (import { SellerService } from './services/seller.service';)::
+
+		export class AuthGuard implements CanActivate {
+ 			constructor(private sellerService:SellerService){}
+  			canActivate(
+   				 route: ActivatedRouteSnapshot,
+    				 state: RouterStateSnapshot): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
+      			 return this.sellerService.isSellerLoggedIn;
+  			}
+  		}
