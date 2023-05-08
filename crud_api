@@ -65,3 +65,33 @@ command ::   ng g guard guard_name
       			 return this.sellerService.isSellerLoggedIn;
   			}
   		}
+		
+————————————————————login user flow————————————————
+-> create a login form and call a function (defined in component.ts file) which will collect the value of the form 
+		 login(data:login){
+       				this.seller.userLogin(data); //this function is defined inside the service section.
+      				 //show error or not 
+      				 this.seller.isLoginError.subscribe((error)=>{
+      	  					 if(error){
+         							 this.login_error = true;
+         						}else{
+          							this.login_error = false;
+       				     		}
+      				 });
+		  }
+-> create an api call for the login in service ::
+		userLogin(data:login){
+    				this.http.get(`http://localhost:3000/seller?email=${data.username}&password=${data.password}`, { observe: 'response' })
+    				 .subscribe((result:any) => {
+      				if(result && result.body && result.body.length){  
+       					 //user credentials are correct
+      					  this.isSellerLoggedIn.next(true); 
+       					 localStorage.setItem('seller',JSON.stringify(result.body));
+        					 this.router.navigate(['seller-home']);
+      				}else{
+         					   //user credentials are wrong
+          					   this.isLoginError.emit(true);
+      				}
+    		});
+  } 
+
